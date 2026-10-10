@@ -97,17 +97,6 @@ Al finalizar, **reinicia el sistema** y:
 
 ---
 
-## Solución de problemas
-
-| Problema | Solución |
-| --- | --- |
-| `No se detectó un gestor de paquetes compatible` | Instala manualmente las dependencias indicadas en **Requisitos**. |
-| Los iconos/fuentes no aparecen | Cierra sesión y vuelve a entrar, o ejecuta `fc-cache -f`. |
-| `lolcat` no disponible | No es crítico; el script muestra la salida sin colores. |
-| `xfconf-query no disponible` | Instala `xfce4-utils` / `xfconf` o configura el tema manualmente. |
-
----
-
 ## Licencia
 
 Distribuido bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
