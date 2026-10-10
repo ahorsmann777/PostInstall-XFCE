@@ -91,7 +91,6 @@ Al finalizar, **reinicia el sistema** y:
 ```
 .
 ├── post_install.sh   # Script principal
-├── Captura.jpg       # Captura de pantalla
 ├── README.md         # Documentación
 └── LICENSE           # Licencia
 ```
