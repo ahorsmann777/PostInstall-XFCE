@@ -19,6 +19,7 @@ Script de post-instalación para configurar un entorno **XFCE** recién instalad
 - **Fondos de pantalla**: descarga una colección y establece uno por defecto.
 - **Candy Icons**: descarga e instala el set de iconos y lo establece como tema.
 - **Tema Adwaita-dark**: se configura como tema GTK en XFCE.
+- **Selección de shell con previsualización**: elige entre **Powerlevel10k** u **Oh My Zsh only** viendo antes la configuración que se aplicará.
 - **zsh** como shell por defecto.
 - **Idempotente**: puede ejecutarse varias veces sin duplicar configuraciones.
 - **Log**: toda la salida se guarda en `POST_INSTALL.log`.
@@ -64,6 +65,23 @@ chmod +x post_install.sh
 ./post_install.sh
 ```
 
+Durante la ejecución se muestra un **menú interactivo** para elegir el entorno del shell. Puedes previsualizar la configuración de cada opción antes de aplicarla:
+
+```
+  Elige el entorno de tu shell:
+    1) Powerlevel10k  - prompt rápido, informativo y personalizable (recomendado)
+    2) Oh My Zsh only - prompt clásico sin Powerlevel10k (config actual del proyecto)
+    3) Ver previsualizaciones
+    4) Omitir este paso
+  Opción [1]:
+```
+
+- **Powerlevel10k**: clona el tema, copia `~/.p10k.zsh` y aplica `shell_config/zshrc.powerlevel10k`.
+- **Oh My Zsh only**: instala Oh My Zsh y aplica `shell_config/zshrc.oh-my-zsh`.
+- Antes de sobrescribir, tu `~/.zshrc` actual se respalda como `~/.zshrc.post_install.<fecha>.bak`.
+
+> En ejecuciones no interactivas (sin terminal) se selecciona **Powerlevel10k** por defecto.
+
 Al finalizar, **reinicia el sistema** y:
 
 1. Cambia la fuente de tu terminal a una de las **MesloLGS NF**.
@@ -77,7 +95,7 @@ Al finalizar, **reinicia el sistema** y:
 2. Detecta la distribución y el gestor de paquetes.
 3. Instala las dependencias base.
 4. Descarga e instala `MesloLGS NF` y `Hack Nerd Font` en `~/.local/share/fonts`.
-5. Clona **powerlevel10k** y lo añade a `~/.zshrc`.
+5. Muestra un menú para elegir **Powerlevel10k** u **Oh My Zsh only**, con previsualización de la configuración, y la aplica.
 6. Añade los bordes redondeados al panel de XFCE.
 7. Descarga fondos de pantalla en `~/Pictures` y establece uno por defecto.
 8. Descarga e instala **Candy Icons**.
@@ -90,10 +108,17 @@ Al finalizar, **reinicia el sistema** y:
 
 ```
 .
-├── post_install.sh   # Script principal
-├── README.md         # Documentación
-└── LICENSE           # Licencia
+├── post_install.sh          # Script principal
+├── shell_config/            # Configuraciones de shell usadas en la previsualización
+│   ├── zshrc.powerlevel10k  # .zshrc para la opción Powerlevel10k
+│   ├── zshrc.oh-my-zsh      # .zshrc para la opción Oh My Zsh only
+│   └── p10k.zsh             # Configuración de Powerlevel10k
+├── Captura.jpg              # Captura de pantalla
+├── README.md                # Documentación
+└── LICENSE                  # Licencia
 ```
+
+> Las configuraciones de `shell_config/` provienen del entorno real del autor y se copian tal cual. Las rutas absolutas del usuario se normalizan a `$HOME` al aplicarlas.
 
 ---
 

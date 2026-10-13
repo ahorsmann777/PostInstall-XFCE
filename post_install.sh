@@ -15,6 +15,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="$(mktemp -d /tmp/${PROC}.XXXXXX)"
 LOG="${SCRIPT_DIR}/${PROC}.log"
 FONT_DIR="${HOME}/.local/share/fonts"
+SHELL_CONFIG_DIR="${SCRIPT_DIR}/shell_config"
 USER="${USER:-$(id -un)}"
 
 cleanup() {
@@ -176,21 +177,139 @@ else
 fi
 
 #--------------------------------------------------------------------#
-# powerlevel10k                                                      #
+# Shell prompt: Powerlevel10k u Oh My Zsh (con previsualización)      #
 #--------------------------------------------------------------------#
-print_banner "         <============================= Installing powerlevel10k ==================================>"
+print_banner "         <============================= Selecting shell prompt ==================================>"
 
-if [[ ! -d "$HOME/powerlevel10k" ]]; then
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/powerlevel10k"
-else
-    print_yellow "powerlevel10k ya está instalado, se omite."
-fi
+CONFIG_P10K="${SHELL_CONFIG_DIR}/zshrc.powerlevel10k"
+CONFIG_OMZ="${SHELL_CONFIG_DIR}/zshrc.oh-my-zsh"
+P10K_THEME_FILE="${SHELL_CONFIG_DIR}/p10k.zsh"
 
-ZSH_THEME_LINE='source ~/powerlevel10k/powerlevel10k.zsh-theme'
-touch "$HOME/.zshrc"
-if ! grep -qxF "$ZSH_THEME_LINE" "$HOME/.zshrc"; then
-    printf '\n%s\n' "$ZSH_THEME_LINE" >> "$HOME/.zshrc"
-fi
+backup_zshrc() {
+    if [[ -f "$HOME/.zshrc" ]]; then
+        local bak="$HOME/.zshrc.post_install.$(date +%Y%m%d-%H%M%S).bak"
+        cp -f "$HOME/.zshrc" "$bak"
+        print_yellow "Backup de .zshrc guardado en $bak"
+    fi
+}
+
+# Normaliza rutas absolutas del usuario original a $HOME
+render_config() {
+    local src="$1" dst="$2"
+    sed "s@${HOME}@\$HOME@g" "$src" > "$dst"
+}
+
+preview_file() {
+    local file="$1"
+    if [[ ! -f "$file" ]]; then
+        print_red "No se encontró el archivo de previsualización: $file"
+        return 0
+    fi
+    print_yellow "----- Vista previa: $(basename "$file") -----"
+    if command -v less >/dev/null 2>&1 && [[ -t 0 ]]; then
+        less -R "$file" || true
+    else
+        cat "$file"
+    fi
+    print_yellow "--------------------------------------------"
+}
+
+install_powerlevel10k() {
+    if [[ ! -d "$HOME/powerlevel10k" ]]; then
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/powerlevel10k"
+    else
+        print_yellow "powerlevel10k ya está instalado, se omite la clonación."
+    fi
+
+    if [[ -f "$P10K_THEME_FILE" ]]; then
+        cp -f "$P10K_THEME_FILE" "$HOME/.p10k.zsh"
+        print_green "Configuración de p10k copiada a ~/.p10k.zsh"
+    fi
+
+    if [[ -f "$CONFIG_P10K" ]]; then
+        backup_zshrc
+        render_config "$CONFIG_P10K" "$HOME/.zshrc"
+        print_green "Configuración .zshrc de Powerlevel10k aplicada."
+    else
+        # Fallback: añadir la línea de source al .zshrc existente
+        local line='source ~/powerlevel10k/powerlevel10k.zsh-theme'
+        touch "$HOME/.zshrc"
+        grep -qxF "$line" "$HOME/.zshrc" || printf '\n%s\n' "$line" >> "$HOME/.zshrc"
+    fi
+}
+
+install_ohmyzsh() {
+    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+        RUNZSH=no KEEP_ZSHRC=yes CHSH=no \
+            sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || \
+            print_red "No se pudo instalar Oh My Zsh."
+    else
+        print_yellow "Oh My Zsh ya está instalado, se omite la instalación."
+    fi
+
+    if [[ -f "$CONFIG_OMZ" ]]; then
+        backup_zshrc
+        render_config "$CONFIG_OMZ" "$HOME/.zshrc"
+        print_green "Configuración .zshrc de Oh My Zsh aplicada."
+    fi
+}
+
+select_shell_prompt() {
+    # Sin terminal interactiva: se usa Powerlevel10k por defecto
+    if [[ ! -t 0 || ! -t 1 ]]; then
+        print_yellow "Ejecución no interactiva: se instalará Powerlevel10k por defecto."
+        install_powerlevel10k
+        return
+    fi
+
+    local choice confirm
+    while true; do
+        echo ""
+        echo "  Elige el entorno de tu shell:"
+        echo "    1) Powerlevel10k  - prompt rápido, informativo y personalizable (recomendado)"
+        echo "    2) Oh My Zsh only - prompt clásico sin Powerlevel10k (config actual del proyecto)"
+        echo "    3) Ver previsualizaciones"
+        echo "    4) Omitir este paso"
+        read -r -p "  Opción [1]: " choice
+        choice="${choice:-1}"
+
+        case "$choice" in
+            1)
+                preview_file "$CONFIG_P10K"
+                preview_file "$P10K_THEME_FILE"
+                read -r -p "  ¿Aplicar Powerlevel10k? [S/n]: " confirm
+                if [[ "$confirm" =~ ^[Nn]$ ]]; then
+                    continue
+                fi
+                install_powerlevel10k
+                break
+                ;;
+            2)
+                preview_file "$CONFIG_OMZ"
+                read -r -p "  ¿Aplicar Oh My Zsh only? [S/n]: " confirm
+                if [[ "$confirm" =~ ^[Nn]$ ]]; then
+                    continue
+                fi
+                install_ohmyzsh
+                break
+                ;;
+            3)
+                preview_file "$CONFIG_P10K"
+                preview_file "$P10K_THEME_FILE"
+                preview_file "$CONFIG_OMZ"
+                ;;
+            4)
+                print_yellow "Se omitió la instalación del prompt."
+                break
+                ;;
+            *)
+                print_red "Opción inválida."
+                ;;
+        esac
+    done
+}
+
+select_shell_prompt
 
 #--------------------------------------------------------------------#
 # XFCE: bordes redondeados del panel                                 #
