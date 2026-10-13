@@ -17,7 +17,7 @@ Script de post-instalación para configurar un entorno **XFCE** recién instalad
 - **powerlevel10k**: clona el tema y lo añade a `~/.zshrc`.
 - **XFCE**: aplica bordes redondeados al panel mediante `gtk.css`.
 - **Fondos de pantalla**: descarga una colección y establece uno por defecto.
-- **Candy Icons**: descarga e instala el set de iconos y lo establece como tema.
+- **Iconos**: elige entre **Candy Icons** o **BeautyBeam**, descarga e instala el set y lo establece como tema.
 - **Tema Adwaita-dark**: se configura como tema GTK en XFCE.
 - **Selección de shell con previsualización**: elige entre **Powerlevel10k** u **Oh My Zsh only** viendo antes la configuración que se aplicará.
 - **zsh** como shell por defecto.
@@ -82,10 +82,26 @@ Durante la ejecución se muestra un **menú interactivo** para elegir el entorno
 
 > En ejecuciones no interactivas (sin terminal) se selecciona **Powerlevel10k** por defecto.
 
+También se muestra un **menú para elegir el set de iconos**:
+
+```
+  Elige el set de iconos:
+    1) Candy Icons - coloridos y redondeados (recomendado)
+    2) BeautyBeam  - con degradados, ideal para temas oscuros
+    3) Omitir este paso
+  Opción [1]:
+```
+
+- **Candy Icons**: se descarga desde [EliverLara/candy-icons](https://github.com/EliverLara/candy-icons).
+- **BeautyBeam**: se descarga desde el [KDE Store](https://store.kde.org/p/2357069) mediante su API.
+- Ambos se instalan en `~/.local/share/icons` y se aplican como tema de iconos en XFCE.
+
+> En ejecuciones no interactivas (sin terminal) se instalan **Candy Icons** por defecto.
+
 Al finalizar, **reinicia el sistema** y:
 
 1. Cambia la fuente de tu terminal a una de las **MesloLGS NF**.
-2. Selecciona los iconos **Candy Icons** si no se aplicaron solos.
+2. Selecciona los iconos **Candy Icons** o **BeautyBeam** si no se aplicaron solos.
 
 ---
 
@@ -98,8 +114,8 @@ Al finalizar, **reinicia el sistema** y:
 5. Muestra un menú para elegir **Powerlevel10k** u **Oh My Zsh only**, con previsualización de la configuración, y la aplica.
 6. Añade los bordes redondeados al panel de XFCE.
 7. Descarga fondos de pantalla en `~/Pictures` y establece uno por defecto.
-8. Descarga e instala **Candy Icons**.
-9. Aplica el tema **Adwaita-dark**.
+8. Muestra un menú para elegir el set de iconos (**Candy Icons** o **BeautyBeam**) y lo instala.
+9. Aplica el tema **Adwaita-dark** y el set de iconos elegido.
 10. Establece **zsh** como shell por defecto.
 
 ---

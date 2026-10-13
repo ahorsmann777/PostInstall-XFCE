@@ -373,26 +373,109 @@ elif ! command -v xfconf-query >/dev/null 2>&1; then
 fi
 
 #--------------------------------------------------------------------#
-# Candy Icons                                                        #
+# Icon theme: Candy Icons or BeautyBeam (selection)                  #
 #--------------------------------------------------------------------#
-print_banner "          <=========================== Downloading Candy Icons ====================================>"
+print_banner "          <=========================== Selecting icon theme ====================================>"
 
-ICON_BASE="$WORK_DIR/candy-icons"
 ICON_TARGET="$HOME/.local/share/icons"
-mkdir -p "$ICON_BASE" "$ICON_TARGET"
+mkdir -p "$ICON_TARGET"
+BEAM_API="https://api.kde-look.org/ocs/v1/content/data/2357069"
 
-wget -q --show-progress -O "$ICON_BASE/master.zip" \
-    "https://github.com/EliverLara/candy-icons/archive/refs/heads/master.zip" || \
-    print_red "No se pudieron descargar los Candy Icons."
-
-if [[ -f "$ICON_BASE/master.zip" ]]; then
-    unzip -q -o "$ICON_BASE/master.zip" -d "$ICON_BASE"
-    SRC_ICONS="$(find "$ICON_BASE" -maxdepth 1 -type d -name 'candy-icons-*' | head -n1)"
-    if [[ -n "$SRC_ICONS" ]]; then
-        rm -rf "$ICON_TARGET/candy-icons"
-        cp -rf "$SRC_ICONS" "$ICON_TARGET/candy-icons"
+# Copia un directorio de tema de iconos en ~/.local/share/icons
+install_icon_dir() {
+    local src="$1" name="$2"
+    if [[ -z "$src" || ! -d "$src" ]]; then
+        print_red "No se encontró el directorio del tema de iconos '$name'."
+        return 1
     fi
-fi
+    rm -rf "${ICON_TARGET:?}/$name"
+    cp -rf "$src" "$ICON_TARGET/$name"
+    print_green "Tema de iconos '$name' instalado en $ICON_TARGET."
+}
+
+install_candy_icons() {
+    local base="$WORK_DIR/candy-icons"
+    mkdir -p "$base"
+    wget -q --show-progress -O "$base/master.zip" \
+        "https://github.com/EliverLara/candy-icons/archive/refs/heads/master.zip" || \
+        { print_red "No se pudieron descargar los Candy Icons."; return 1; }
+    unzip -q -o "$base/master.zip" -d "$base"
+    local src
+    src="$(find "$base" -maxdepth 1 -type d -name 'candy-icons-*' | head -n1)"
+    install_icon_dir "$src" "candy-icons"
+}
+
+install_beautybeam() {
+    local base="$WORK_DIR/beautybeam"
+    mkdir -p "$base"
+    local url
+    url="$(curl -fsSL "$BEAM_API" | tr -d '\n' | \
+        sed -n 's:.*<downloadlink1>\([^<]*\)</downloadlink1>.*:\1:p')"
+    if [[ -z "$url" ]]; then
+        print_red "No se pudo obtener el enlace de descarga de BeautyBeam."
+        return 1
+    fi
+    wget -q --show-progress -O "$base/BeautyBeam.tar.gz" "$url" || \
+        { print_red "No se pudo descargar BeautyBeam."; return 1; }
+    tar -xzf "$base/BeautyBeam.tar.gz" -C "$base"
+    local src
+    src="$(dirname "$(find "$base" -type f -name index.theme | head -n1)")"
+    install_icon_dir "$src" "BeautyBeam"
+}
+
+SELECTED_ICON_THEME=""
+
+select_icon_theme() {
+    # Sin terminal interactiva: Candy Icons por defecto
+    if [[ ! -t 0 || ! -t 1 ]]; then
+        print_yellow "Ejecución no interactiva: se instalarán Candy Icons por defecto."
+        install_candy_icons && SELECTED_ICON_THEME="candy-icons"
+        return
+    fi
+
+    local choice confirm
+    while true; do
+        echo ""
+        echo "  Elige el set de iconos:"
+        echo "    1) Candy Icons - coloridos y redondeados (recomendado)"
+        echo "    2) BeautyBeam  - con degradados, ideal para temas oscuros"
+        echo "    3) Omitir este paso"
+        read -r -p "  Opción [1]: " choice
+        choice="${choice:-1}"
+
+        case "$choice" in
+            1)
+                read -r -p "  ¿Instalar Candy Icons? [S/n]: " confirm
+                if [[ "$confirm" =~ ^[Nn]$ ]]; then
+                    continue
+                fi
+                if install_candy_icons; then
+                    SELECTED_ICON_THEME="candy-icons"
+                fi
+                break
+                ;;
+            2)
+                read -r -p "  ¿Instalar BeautyBeam? [S/n]: " confirm
+                if [[ "$confirm" =~ ^[Nn]$ ]]; then
+                    continue
+                fi
+                if install_beautybeam; then
+                    SELECTED_ICON_THEME="BeautyBeam"
+                fi
+                break
+                ;;
+            3)
+                print_yellow "Se omitió la instalación de iconos."
+                break
+                ;;
+            *)
+                print_red "Opción inválida."
+                ;;
+        esac
+    done
+}
+
+select_icon_theme
 
 #--------------------------------------------------------------------#
 # Tema Adwaita-dark                                                  #
@@ -405,11 +488,13 @@ if command -v xfconf-query >/dev/null 2>&1; then
     else
         xfconf-query -c xsettings -p /Net/ThemeName -s "Adwaita-dark" --create -t string || true
     fi
-    # Iconos Candy si el paquete se instaló
-    if [[ -d "$HOME/.local/share/icons/candy-icons" ]]; then
-        xfconf-query -c xsettings -p /Net/IconThemeName >/dev/null 2>&1 \
-            && xfconf-query -c xsettings -p /Net/IconThemeName -s "candy-icons" \
-            || xfconf-query -c xsettings -p /Net/IconThemeName -s "candy-icons" --create -t string || true
+    # Aplicar el tema de iconos elegido (Candy Icons o BeautyBeam)
+    if [[ -n "$SELECTED_ICON_THEME" ]]; then
+        if xfconf-query -c xsettings -p /Net/IconThemeName >/dev/null 2>&1; then
+            xfconf-query -c xsettings -p /Net/IconThemeName -s "$SELECTED_ICON_THEME" || true
+        else
+            xfconf-query -c xsettings -p /Net/IconThemeName -s "$SELECTED_ICON_THEME" --create -t string || true
+        fi
     fi
 else
     print_yellow "xfconf-query no disponible; ajusta el tema manualmente."
@@ -446,9 +531,9 @@ echo "                                                                          
 print_banner "                                        《·───────────────·》                          "
 print_banner "              You must change the font of your terminal to one of the MESLO fonts          "
 print_banner "              to configure correctly the p10k terminal, and you should set the icons       "
-print_banner "                  with Candy Icons, the rest depend on your taste, have fun             "
+print_banner "                  with Candy Icons or BeautyBeam, the rest depends on your taste, have fun "
 print_banner "                                        《·───────────────·》                              "
 print_banner "              Debes cambiar la fuente de tu terminal a una de las fuentes MESLO           "
 print_banner "              para configurar correctamente la terminal p10k, y deberías establecer        "
-print_banner "              los iconos con Candy Icons; el resto depende de tu gusto, ¡diviértete!       "
+print_banner "              los iconos con Candy Icons o BeautyBeam; el resto depende de tu gusto, ¡diviértete! " 
 print_banner "                                        《·───────────────·》"
