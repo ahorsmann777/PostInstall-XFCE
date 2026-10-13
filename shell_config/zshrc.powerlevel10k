@@ -80,6 +80,13 @@ plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-bat zsh-history-sub
 # Oh My Zsh es opcional para Powerlevel10k: se carga solo si está instalado.
 if [[ -d "$ZSH" ]]; then
     source $ZSH/oh-my-zsh.sh
+else
+    # Sin Oh My Zsh: cargamos los plugins directamente.
+    ZSH_PLUGINS_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
+    [[ -f "$ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && \
+        source "$ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh"
+    [[ -f "$ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] && \
+        source "$ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 fi
 
 #---------------------------------------------------------------------

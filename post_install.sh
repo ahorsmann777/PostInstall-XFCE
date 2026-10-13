@@ -130,6 +130,9 @@ ensure_cmd wget     wget     || true
 ensure_cmd unzip    unzip    || true
 ensure_cmd zsh      zsh      || true
 ensure_cmd curl     curl     || true
+ensure_cmd lsd      lsd      || true
+ensure_cmd less     less     || true
+ensure_cmd tar      tar      || true
 ensure_cmd fc-cache fontconfig fontconfig1 || true
 
 # lolcat es opcional (no rompe si no existe en el repo)
@@ -206,12 +209,36 @@ preview_file() {
         return 0
     fi
     print_yellow "----- Vista previa: $(basename "$file") -----"
-    if command -v less >/dev/null 2>&1 && [[ -t 0 ]]; then
-        less -R "$file" || true
+    # Se usa /dev/tty para poder paginar aunque stdout esté redirigido al log.
+    if command -v less >/dev/null 2>&1 && [[ -r /dev/tty ]]; then
+        less -R "$file" < /dev/tty > /dev/tty 2>&1 || true
     else
         cat "$file"
     fi
     print_yellow "--------------------------------------------"
+}
+
+# Descarga los plugins de zsh en el directorio custom de Oh My Zsh
+install_zsh_plugins() {
+    local custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+    local dir="$custom/plugins"
+    mkdir -p "$dir"
+
+    local spec name repo
+    for spec in \
+        "zsh-autosuggestions|https://github.com/zsh-users/zsh-autosuggestions" \
+        "zsh-syntax-highlighting|https://github.com/zsh-users/zsh-syntax-highlighting.git"
+    do
+        name="${spec%%|*}"
+        repo="${spec#*|}"
+        if [[ -d "$dir/$name" ]]; then
+            print_yellow "El plugin $name ya está instalado, se omite."
+        else
+            print_green "Instalando plugin $name..."
+            git clone --depth=1 "$repo" "$dir/$name" || \
+                print_red "No se pudo clonar el plugin $name."
+        fi
+    done
 }
 
 install_powerlevel10k() {
@@ -220,6 +247,8 @@ install_powerlevel10k() {
     else
         print_yellow "powerlevel10k ya está instalado, se omite la clonación."
     fi
+
+    install_zsh_plugins
 
     if [[ -f "$P10K_THEME_FILE" ]]; then
         cp -f "$P10K_THEME_FILE" "$HOME/.p10k.zsh"
@@ -247,6 +276,8 @@ install_ohmyzsh() {
         print_yellow "Oh My Zsh ya está instalado, se omite la instalación."
     fi
 
+    install_zsh_plugins
+
     if [[ -f "$CONFIG_OMZ" ]]; then
         backup_zshrc
         render_config "$CONFIG_OMZ" "$HOME/.zshrc"
@@ -255,8 +286,9 @@ install_ohmyzsh() {
 }
 
 select_shell_prompt() {
-    # Sin terminal interactiva: se usa Powerlevel10k por defecto
-    if [[ ! -t 0 || ! -t 1 ]]; then
+    # Sin terminal interactiva: se usa Powerlevel10k por defecto.
+    # Nota: se comprueba solo stdin porque stdout se redirige al log con tee.
+    if [[ ! -t 0 ]]; then
         print_yellow "Ejecución no interactiva: se instalará Powerlevel10k por defecto."
         install_powerlevel10k
         return
@@ -426,8 +458,9 @@ install_beautybeam() {
 SELECTED_ICON_THEME=""
 
 select_icon_theme() {
-    # Sin terminal interactiva: Candy Icons por defecto
-    if [[ ! -t 0 || ! -t 1 ]]; then
+    # Sin terminal interactiva: Candy Icons por defecto.
+    # Nota: se comprueba solo stdin porque stdout se redirige al log con tee.
+    if [[ ! -t 0 ]]; then
         print_yellow "Ejecución no interactiva: se instalarán Candy Icons por defecto."
         install_candy_icons && SELECTED_ICON_THEME="candy-icons"
         return

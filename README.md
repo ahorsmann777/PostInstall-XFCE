@@ -20,6 +20,7 @@ Script de post-instalación para configurar un entorno **XFCE** recién instalad
 - **Iconos**: elige entre **Candy Icons** o **BeautyBeam**, descarga e instala el set y lo establece como tema.
 - **Tema Adwaita-dark**: se configura como tema GTK en XFCE.
 - **Selección de shell con previsualización**: elige entre **Powerlevel10k** u **Oh My Zsh only** viendo antes la configuración que se aplicará.
+- **Plugins de zsh**: descarga e integra `zsh-autosuggestions` y `zsh-syntax-highlighting` en ambas configuraciones.
 - **zsh** como shell por defecto.
 - **Idempotente**: puede ejecutarse varias veces sin duplicar configuraciones.
 - **Log**: toda la salida se guarda en `POST_INSTALL.log`.
@@ -51,7 +52,7 @@ El script soporta cualquier distribución con **XFCE** y uno de los siguientes g
 - Conexión a internet (descarga fuentes, temas, iconos y fondos).
 - Un usuario **no root** para ejecutar el script.
 
-Dependencias (`git`, `wget`, `unzip`, `zsh`, `curl`, `fontconfig`) se instalan automáticamente si faltan.
+Dependencias (`git`, `wget`, `unzip`, `zsh`, `curl`, `lsd`, `less`, `tar`, `fontconfig`) se instalan automáticamente si faltan.
 
 ---
 
@@ -76,8 +77,9 @@ Durante la ejecución se muestra un **menú interactivo** para elegir el entorno
   Opción [1]:
 ```
 
-- **Powerlevel10k**: clona el tema, copia `~/.p10k.zsh` y aplica `shell_config/zshrc.powerlevel10k`.
-- **Oh My Zsh only**: instala Oh My Zsh y aplica `shell_config/zshrc.oh-my-zsh`.
+- **Powerlevel10k**: clona el tema, descarga los plugins, copia `~/.p10k.zsh` y aplica `shell_config/zshrc.powerlevel10k`.
+- **Oh My Zsh only**: instala Oh My Zsh, descarga los plugins y aplica `shell_config/zshrc.oh-my-zsh`.
+- **Plugins**: `zsh-autosuggestions` y `zsh-syntax-highlighting` se clonan en `${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins` y se cargan desde ambos `.zshrc`.
 - Antes de sobrescribir, tu `~/.zshrc` actual se respalda como `~/.zshrc.post_install.<fecha>.bak`.
 
 > En ejecuciones no interactivas (sin terminal) se selecciona **Powerlevel10k** por defecto.
@@ -111,7 +113,7 @@ Al finalizar, **reinicia el sistema** y:
 2. Detecta la distribución y el gestor de paquetes.
 3. Instala las dependencias base.
 4. Descarga e instala `MesloLGS NF` y `Hack Nerd Font` en `~/.local/share/fonts`.
-5. Muestra un menú para elegir **Powerlevel10k** u **Oh My Zsh only**, con previsualización de la configuración, y la aplica.
+5. Muestra un menú para elegir **Powerlevel10k** u **Oh My Zsh only**, con previsualización de la configuración, y la aplica junto con los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 6. Añade los bordes redondeados al panel de XFCE.
 7. Descarga fondos de pantalla en `~/Pictures` y establece uno por defecto.
 8. Muestra un menú para elegir el set de iconos (**Candy Icons** o **BeautyBeam**) y lo instala.
