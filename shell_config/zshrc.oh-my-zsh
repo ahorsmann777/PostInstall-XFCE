@@ -111,28 +111,13 @@ source $ZSH/oh-my-zsh.sh
 #alias fastfetch='fastfetch -c neofetch -l $HOME/.config/fastfetch/cat3.txt | lolcat'
 # muestra iconos en los elementos listados
 alias ls='lsd'
-alias actualizar='python3 $HOME/Documentos/python/update.py'
-alias archlinux='docker start archlinux && docker exec -it archlinux su - arch'
-alias kali='docker start kali_persistente && docker exec -it kali_persistente su - kali'
-alias fedora='docker start fedora_persistent && docker exec -it fedora_persistent su - fedora'
-alias debian='docker start debian_persistente && docker exec -it debian_persistente su - debian'
-alias icat='kitten icat'
-alias df='duf'
-alias ani-cli='bash $HOME/Documentos/ani-cli/ani-cli'
-alias tetris='$HOME/Documentos/rust/tetris/target/debug/tetris'
-#alias rustc='$HOME/.cargo/bin/rustc'
-# ejecutar al inicar 
-#fastfetch
-#fastfetch -c neofetch -l $HOME/.config/fastfetch/cat3.txt | lolcat
-fastfetch -c neofetch --logo $HOME/.config/fastfetch/Tux.png --logo-type kitty --logo-width 35 --logo-height 20
-
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:$HOME/.lmstudio/bin"
 # End of LM Studio CLI section
 
 
 # opencode
-export PATH=$HOME/.opencode/bin:$PATH
+#export PATH=$HOME/.opencode/bin:$PATH
 
 # Android SDK (compilación de APK del proyecto capitulo-san-martin)
 export ANDROID_HOME="$HOME/Android/Sdk"
